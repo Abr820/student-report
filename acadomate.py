@@ -19,6 +19,7 @@ class Acadomate:
 			self.indices[title] = None
 		self._create_sheet("Fundamental",["Mentors","Students","Subjects"])
 		self._create_sheet("Answers",["Qno","Answer","Tags"],index = "Qno")
+		self._create_sheet("Responses",["Student Name"],index = "Student Name")
 
 	def _create_sheet(self, title , columns , index = None):
 		ws = None
@@ -55,7 +56,7 @@ class Acadomate:
 			worksheet = self.sh.worksheet(title)
 			columns = worksheet.row_values(1)
 			df = pd.DataFrame(worksheet.get_all_records(),columns=columns)
-			df = df.replace({'': None})
+			df = df.replace({'': None,np.nan:None})
 
 			# index = self.indices[title]
 			# if index is not None and index in df.columns:
@@ -90,7 +91,6 @@ class Acadomate:
 					if not unique or (unique and v not in value_list):
 						value_list.append(v)
 			all_df[c] = pd.Series(value_list,dtype=dt)
-		print(all_df)
 		df = pd.DataFrame(all_df,columns=df.columns)
 		self.dfs[title] = df
 
@@ -105,21 +105,40 @@ class Acadomate:
 
 	def _get_column(self,title,col_name):
 		df = self._read_sheet(title)
-		return [v for v in df[col_name].values.tolist() if v is not None and v != np.nan]
+		l = [v for v in df[col_name].values.tolist() if v is not None and v != np.nan]
+		print(l)
+		return l
 
-	def _add_row(self,title,data):
+	def _add_row(self,title,data,replace = True):
 		df = self._read_sheet(title)
-		index = self.indices[title]
+		indexx = self.indices[title]
+		if not replace:
+			idx = self._find_row_index(df,indexx,data[0])
+			data = df.loc[idx[0]].values.tolist() + data[1:]
 		df = df.append(pd.Series(data, index=df.columns[:len(data)]), ignore_index=True)
-		df = df.drop_duplicates(subset=[index],keep='last')
+		df = df.drop_duplicates(subset=[indexx],keep='last')
 		self.dfs[title] = df
 
+	def _add_value(self,title,row_name,col_name,value, index = None):
+		df = self._read_sheet(title)
+		if index is None:
+			index = self.indices[title]
+		idx = self._find_row_index(df,index,row_name)
+		df.loc[idx,col_name] = value
+		self.dfs[title] = df
+
+	def _find_row_index(self,df,col_name,row_val):
+		idx = df.index[df[col_name] == row_val].tolist()
+		return idx[0]
 
 	def add_mentors(self,names):
 		self._add_element("Fundamental","Mentors",names,unique=True)
 
 	def add_students(self,names):
 		self._add_element("Fundamental","Students",names,unique=True)
+
+	def get_students(self):
+		return self._get_column("Fundamental","Students")
 
 	def add_subjects(self,names):
 		self._add_element("Fundamental","Subjects",names,unique=True)
@@ -143,4 +162,12 @@ class Acadomate:
 	def add_answers(self, row_name , answers , tags):
 		rows = [row_name+f"Q{i+1}" for i in range(len(answers))]
 		for idx,ans,tag in zip(rows,answers,tags):
-			self._add_row("Answers",[idx,ans,tag])
+			self._add_row("Answers",[idx,ans,tag],True)
+
+	def add_student_response(self,sname,tname,answers):
+		qnos = [tname+f"Q{i+1}" for i in range(len(answers))]
+		for qno in qnos:
+			self._add_column("Responses",qno,[],'str')
+		self._add_element("Responses","Student Name",[sname],unique = True)
+		for qno,ans in zip(qnos,answers):
+			self._add_value("Responses",sname,qno,ans)

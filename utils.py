@@ -1,4 +1,4 @@
-def get_answers(am):
+def get_test_number():
 	t = -1
 	while(t<=0):
 		inp = input("Enter test number : ")
@@ -10,19 +10,48 @@ def get_answers(am):
 				print("!!!! INVALID CHOICE !!!!")
 	print(f"Test number : {t}")
 
-	subjects = am.get_subjects()
+	return t
+
+def get_choice(arr):
+	if not arr:
+		print("!!! ARRAY is empty !!!")
+		return -1
+
 	choice = 0
-	while(choice < 1 or choice > 3):
-		print("Choose which subject among the following : ")
-		for i in range(len(subjects)):
-			print(f"{i+1} . {subjects[i]}")
+	while(choice < 1 or choice > len(arr)):
+		print("Choose among the following : ")
+		for i in range(len(arr)):
+			print(f"{i+1} . {arr[i]}")
 		inp = input("Enter your choice : ")
 		if not inp.isnumeric():
 			print("!!!! INVALID INPUT !!!!")
 		else:
 			choice = int(inp)
-			if choice < 1 or choice > len(subjects):
+			if choice < 1 or choice > len(arr):
 				print("!!!! INVALID CHOICE !!!!")
+	return choice
+
+def get_multi_choices(arr):
+	choices = []
+	valids = [i+1 for i in range(len(arr))]
+	while(len(choices)<=0 or not set(choices).issubset(set(valids))):
+		print("Choose multiple choice among the followings : ")
+		for j in range(len(arr)):
+			print(f"{j+1}. {arr[j]}")
+		inps = (input(f"Enter choices separated by space (e.g., 1 3 7) : ")).split(" ")
+		print("inputs:  ",inps)
+		if not all(x.isnumeric() for x in inps):
+			print("!!!! INVALID INPUT !!!!")
+		else:
+			choices = [int(x) for x in inps]
+			if not set(choices).issubset(set(valids)):
+				print("!!!! INVALID CHOICE !!!!")
+	choices = sorted(choices)
+	print("Choices picked up : ",choices)
+	return choices
+
+def get_subject_name(subjects):
+	choice = get_choice(subjects)
 
 	sub = subjects[choice-1]
 	print(f"{sub} chosen.")
@@ -30,11 +59,9 @@ def get_answers(am):
 	subject_abbr = [''.join(i[0].upper() for i in s.split() if len(i) > 3) for s in subjects]
 	print("Subject Abbreaviations : ",subject_abbr)
 
-	row_name = f"T{t}{subject_abbr[choice-1]}"
+	return sub , subject_abbr[choice-1]
 
-	topics = am.get_topics(sub)
-	print(f"{sub} topics are : {topics}")
-
+def get_number_of_questions():
 	n = 0
 	while(n<=0):
 		inp = input("Number of questions : ")
@@ -46,35 +73,65 @@ def get_answers(am):
 				print("!!!! INVALID CHOICE !!!!")
 	print(f"{n} questions")
 
+	return n
+
+def get_response(valids,n):
+	ans = ''
+	while ans not in valids:
+		ans = input(f"Enter answer for question number {n} ({'/'.join(v.upper() for v in valids)}) : ").upper()
+		if ans not in valids:
+			print("!!!! INVALID INPUT !!!!!")
+	return ans
+
+def get_answers(am):
+	t = get_test_number()
+
+	subjects = am.get_subjects()
+	sub , sub_abbr = get_subject_name(subjects)
+
+	row_name = f"T{t}{sub_abbr}"
+
+	topics = am.get_topics(sub)
+	print(f"{sub} topics are : {topics}")
+
+	n = get_number_of_questions()
+
 	answers = []
 	tag_list = []
 	for i in range(n):
-		ans = 'NA'
-		valids = ['A','B','C','D']
-		while ans not in valids:
-			ans = input(f"Enter answer for question number {i+1} : ").upper()
-			if ans not in valids:
-				print("!!!! INVALID INPUT !!!!!")
+		ans = get_response(['A','B','C','D'],i+1)
 		answers.append(ans)
 
-		tags_nos = []
-		valids = [i+1 for i in range(len(topics))]
-		while(len(tags_nos)<=0 or not set(tags_nos).issubset(set(valids))):
-			print("Choose topics among the followings : ")
-			for j in range(len(topics)):
-				print(f"{j+1}. {topics[j]}")
-			inps = (input(f"Enter topic choices for question {i+1} separated by space (e.g., 1 3 7) : ")).split(" ")
-			print("inputs:  ",inps)
-			if not all(x.isnumeric() for x in inps):
-				print("!!!! INVALID INPUT !!!!")
-			else:
-				tags_nos = [int(x) for x in inps]
-				if not set(tags_nos).issubset(set(valids)):
-					print("!!!! INVALID CHOICE !!!!")
-		print("Tag Numbers : ",tags_nos)
+		tags_nos = get_multi_choices(topics)
 		tag_list.append([topics[x-1] for x in tags_nos])
 		
 	print("Answers : ",answers)
 	print("Tags : ",tag_list)
 
 	return row_name, answers , tag_list
+
+
+def get_student_answer(am):
+	students = am.get_students()
+	choice = get_choice(students)
+	name = students[choice-1]
+	print(f"{name} chosen")
+
+	t = get_test_number()
+
+	subjects = am.get_subjects()
+	sub , sub_abbr = get_subject_name(subjects)
+
+	row_name = f"T{t}{sub_abbr}"
+
+	n = get_number_of_questions()
+
+	answers = []
+	for i in range(n):
+		ans = get_response(['A','B','C','D','NA'],i+1)
+		answers.append(ans)
+
+	print("Student Name : ",name)	
+	print("Answers : ",answers)
+
+	return name , row_name , answers
