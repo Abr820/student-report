@@ -108,7 +108,7 @@ def get_answers(am):
 	print("Answers : ",answers)
 	print("Tags : ",tag_list)
 
-	return row_name, answers , tag_list
+	return t , row_name, answers , tag_list
 
 
 def get_student_answer(am):
@@ -134,4 +134,30 @@ def get_student_answer(am):
 	print("Student Name : ",name)	
 	print("Answers : ",answers)
 
-	return name , row_name , answers
+	return t , name , row_name , answers
+
+def update_fundamentals(am):
+	print("-"*30 + "\nFundamental Informations\n"+"-"*30)
+	ops = ["Add Mentor","Add Student","Add Subject","Add Topics","Delete Mentor","Delete Student","Delete Subject" , "Exit"]
+
+	choice = 0
+	while choice != len(ops):
+		choice = get_choice(ops)
+
+		if choice == 1:
+			name = input("Enter the mentor name : ")
+			am.add_mentors([name])
+		elif choice == 2:
+			name = input("Enter the student name : ")
+			am.add_students([name])
+		elif choice == 3:
+			name = input("Enter the subject name : ")
+			am.add_subjects([name])
+		elif choice == 4:
+			subjects = am.get_subjects()
+			sub , _ = get_subject_name(subjects)
+			name = input("Enter comma separated topic names for subject {sub} (e.g., Number System , Divisibility): ")
+			name = name.replace(" , ",",").replace(", ",",").replace(" ,",",")
+			topics = [topic for topic in name.split(",") if topic]
+			am.add_topics(sub,topics)
+	
