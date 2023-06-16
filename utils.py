@@ -162,8 +162,8 @@ def update_fundamentals(am):
 			am.add_topics(sub,topics)
 
 def update_reports(am):
-	print("-"*30 + "\nAnswers and Responses\n"+"-"*30)
-	ops = ["Add Test Answer" , "Add Student Response" , "Make Report"  , "Make Result", "Update Test Answer" , "Update Student Response", "Exit"]
+	print("-"*30 + "\nAnswers , Responses and Reports\n"+"-"*30)
+	ops = ["Add Test Answer" , "Add Student Response" , "Make Report"  , "Make Result", "Write ALL into Spreadsheet", "Update Test Answer" , "Update Student Response", "Exit"]
 
 	choice = 0
 	while choice != len(ops):
@@ -184,11 +184,29 @@ def update_reports(am):
 				for col_type in col_types[:-1]:
 					am.add_report(col_type)
 		elif choice == 4:
-			tests = am.get_tests() + ["All"]
-			ch = get_choice(tests)
-			if ch != len(tests):
+			tests = am.get_tests()
+			tests_str = ["Test - "+str(t) for t in tests] + ["All"]
+			ch = get_choice(tests_str)
+			if ch != len(tests_str):
 				am.make_test_result(tests[ch-1])
 			else:
-				for test in tests[:-1]:
+				for test in tests:
 					am.make_test_result(test)
+		elif choice == 5:
+			am.write_all()
+
+def update_acadomate(am):
+	print("-"*30 + "\nWELCOME to Acadomate\n"+"-"*30)
+	ops = ["Update Fundamentals" , "Update Reports", "Exit"]
+
+	choice = 0
+	while choice != len(ops):
+		choice = get_choice(ops)
+
+		if choice == 1:
+			update_fundamentals(am)
+		elif choice == 2:
+			update_reports(am)
+
+		am.write_all()
 	
