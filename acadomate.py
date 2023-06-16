@@ -40,6 +40,7 @@ class Acadomate:
 			df = pd.DataFrame(d)
 			self.__write_sheet(title,df)
 			print(f"Column names {columns} added")
+			values_list = df.columns
 
 		if index is not None and index in values_list:
 			self._indices[title] = index
@@ -79,7 +80,7 @@ class Acadomate:
 			df = df.replace({None:'',np.nan:''})
 			print("Dataframe to be saved : ")
 			print(df.head())
-			gpd.set_with_dataframe(worksheet=worksheet, dataframe=df, include_index=include_index,include_column_header=True, resize=False)
+			gpd.set_with_dataframe(worksheet=worksheet, dataframe=df, include_index=include_index,include_column_header=True, resize=False,allow_formulas=True)
 			self._dfs[title] = None
 			print(f"{title} is updated")
 
@@ -137,6 +138,15 @@ class Acadomate:
 		if idx:
 			return idx[0]
 		return None
+
+	def __add_average(self,title):
+		import string
+		letters = list(string.ascii_lowercase)
+		letters.extend([i+b for i in letters for b in letters])
+		df = self.__read_sheet(title)
+		row_last , col_last = df.shape
+		row = ["Average"] + [f"=IF(COUNTA({l}2:{l}{row_last+1})=0,\"\",AVERAGE({l}2:{l}{row_last+1}))" for l in letters[1:col_last]]
+		self.__add_row(title , row)
 
 	def add_mentors(self,names):
 		self.__add_elements("Fundamental","Mentors",names,unique=True)
@@ -311,6 +321,7 @@ class Acadomate:
 		self.__create_sheet(worksheet_name,["Student Name"],"Student Name")
 		df = self.compute_report(col_type=col_type,scale=scale)
 		self._dfs[worksheet_name] = df
+		self.__add_average(worksheet_name)
 
 	def make_test_result(self, test_number):
 		worksheet_name = f"Result-Test{test_number}"
@@ -328,4 +339,5 @@ class Acadomate:
 
 		self.__create_sheet(worksheet_name,["Student Name"],"Student Name")
 		self._dfs[worksheet_name] = df
+		self.__add_average(worksheet_name)
 
