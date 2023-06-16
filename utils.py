@@ -160,4 +160,35 @@ def update_fundamentals(am):
 			name = name.replace(" , ",",").replace(", ",",").replace(" ,",",")
 			topics = [topic for topic in name.split(",") if topic]
 			am.add_topics(sub,topics)
+
+def update_reports(am):
+	print("-"*30 + "\nAnswers and Responses\n"+"-"*30)
+	ops = ["Add Test Answer" , "Add Student Response" , "Make Report"  , "Make Result", "Update Test Answer" , "Update Student Response", "Exit"]
+
+	choice = 0
+	while choice != len(ops):
+		choice = get_choice(ops)
+
+		if choice == 1:
+			test_num ,rname , ans , tags = get_answers(am)
+			am.add_answers(test_num , rname,ans,tags)
+		elif choice == 2:
+			test_num , sname , qname , answers = get_student_answer(am)
+			am.add_student_response(test_num , sname,qname,answers)
+		elif choice == 3:
+			col_types = ['topic','subject','test','average','all']
+			ch = get_choice(col_types)
+			if ch != len(col_types):
+				am.add_report(col_types[ch-1])
+			else:
+				for col_type in col_types[:-1]:
+					am.add_report(col_type)
+		elif choice == 4:
+			tests = am.get_tests() + ["All"]
+			ch = get_choice(tests)
+			if ch != len(tests):
+				am.make_test_result(tests[ch-1])
+			else:
+				for test in tests[:-1]:
+					am.make_test_result(test)
 	

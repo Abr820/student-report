@@ -21,7 +21,6 @@ class Acadomate:
 		self.__create_sheet("Fundamental",["Tests","Mentors","Students","Subjects"])
 		self.__create_sheet("Answers",["Qno","Answer","Tags"],index = "Qno")
 		self.__create_sheet("Responses",["Student Name"],index = "Student Name")
-		self.__create_sheet("Reports",["Student Name"],"Student Name")
 
 	def __create_sheet(self, title , columns , index = None):
 		ws = None
@@ -260,7 +259,7 @@ class Acadomate:
 						col_vals[1] += 1
 
 			for col_name , val in zip(col_names,col_vals):
-				d[col_name].append(scale*val/(sum(col_vals) if sum(col_vals)>0 else 1e-6) if scale is not None else val)
+				d[col_name].append((scale*val/sum(col_vals) if scale is not None else val) if sum(col_vals)>0 else None)
 		
 		return d
 
@@ -318,9 +317,14 @@ class Acadomate:
 
 		df_abs = self.compute_report(col_type='subject',test_num=test_number,scale=None)
 		df_100 = self.compute_report(col_type='subject',test_num=test_number,scale=100)
+		df_100.rename(columns = {c : c + " %age" for c in df_100.columns}, inplace = True)
 		df = pd.concat([df_abs,df_100.iloc[:,1:]],axis=1)
-		cols = [c for c in df.columns if re.search("Correct",c) is None]
-		df = df.drop(cols,axis=1)
+		cols = [c for c in df.columns if re.search("Correct",c) is not None]
+		cols = sorted(cols)
+		cols.insert(0,"Student Name")
+		dropped_cols = [c for c in df.columns if c not in cols]
+		df = df.drop(dropped_cols,axis=1)
+		df = df.loc[:,cols]
 
 		self.__create_sheet(worksheet_name,["Student Name"],"Student Name")
 		self._dfs[worksheet_name] = df
