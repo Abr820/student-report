@@ -148,6 +148,36 @@ class Acadomate:
 		row = ["Average"] + [f"=IF(COUNTA({l}2:{l}{row_last+1})=0,\"\",AVERAGE({l}2:{l}{row_last+1}))" for l in letters[1:col_last]]
 		self.__add_row(title , row)
 
+	def __add_total(self,title, suffix = None,col_names=None , weights = None , is_average=False , is_null = False):
+		new_col = "Total"+(" "+suffix if suffix is not None else "")
+		df = self.__read_sheet(title)
+		if col_names is None:
+			col_names = [col for col in df.columns]
+			if "Student Name" in col_names:
+				col_names.remove("Student Name")
+
+		if weights is None or len(weights) != len(col_names):
+			weights = [1 for i in range(len(col_names))]
+
+		if is_average:
+			weights = [w/sum(weights) for w in weights]
+
+		def weighted_avg(row,col_names,weights,is_null = False):
+			# print("lambda function : ",row,col_names)
+			tot = 0
+			for c , w in zip(col_names,weights):
+				if row[c] is None or pd.isnull(row[c]):
+					if not is_null:
+						return None
+				else:
+					tot += w * row[c]
+			return tot
+
+		# df[new_col] = df[col_names].mul(weights).sum(axis=1)
+		df[new_col] = df.apply(lambda row : weighted_avg(row,col_names,weights,is_null),axis = 1)
+
+		self._dfs[title] = df
+
 	def add_mentors(self,names):
 		self.__add_elements("Fundamental","Mentors",names,unique=True)
 
@@ -306,7 +336,7 @@ class Acadomate:
 		df = df.loc[:,cols]
 		return df
 	
-	def add_report(self,col_type = 'all'):
+	def add_report(self,col_type = None):
 		worksheet_name = "Report"
 		if col_type == 'topic':
 			worksheet_name += "-Topic"
@@ -314,13 +344,18 @@ class Acadomate:
 			worksheet_name += "-Subject"
 		elif col_type == 'test':
 			worksheet_name += "-Test"
-		else:
-			worksheet_name += "-Average"
+
+		is_null = col_type == 'topic'
+		is_avg = col_type != 'topic'
 		
 		scale = 100 if col_type != 'topic' else None
 		self.__create_sheet(worksheet_name,["Student Name"],"Student Name")
 		df = self.compute_report(col_type=col_type,scale=scale)
 		self._dfs[worksheet_name] = df
+		for suff in ["Correct" , "Wrong", "NotAttempted"]:
+			cols = [col for col in df.columns if re.search(suff,col) is not None]
+			self.__add_total(worksheet_name,is_average=is_avg,col_names=cols,suffix=suff,is_null=is_null)
+
 		self.__add_average(worksheet_name)
 
 	def make_test_result(self, test_number):
@@ -339,5 +374,10 @@ class Acadomate:
 
 		self.__create_sheet(worksheet_name,["Student Name"],"Student Name")
 		self._dfs[worksheet_name] = df
+
+		cols = [col for col in df.columns if re.search("%age",col) is not None]
+		wgts = [25 , 25 , 50]
+		self.__add_total(worksheet_name,is_average=True,col_names=cols,weights=wgts)
+
 		self.__add_average(worksheet_name)
 

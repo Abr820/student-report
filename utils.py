@@ -176,7 +176,7 @@ def update_reports(am):
 			test_num , sname , qname , answers = get_student_answer(am)
 			am.add_student_response(test_num , sname,qname,answers)
 		elif choice == 3:
-			col_types = ['topic','subject','test','average','all']
+			col_types = ['topic','subject','test','all']
 			ch = get_choice(col_types)
 			if ch != len(col_types):
 				am.add_report(col_types[ch-1])
