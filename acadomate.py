@@ -15,9 +15,11 @@ class Acadomate:
 		self.sheets = [ws.title for ws in self.sh.worksheets()]
 		self._dfs = {}
 		self._indices = {}
+		self._changed = {}
 		for title in self.sheets:
 			self._dfs[title] = None
 			self._indices[title] = None
+			self._changed[title] = False
 		self.__create_sheet("Fundamental",["Tests","Mentors","Students","Subjects"])
 		self.__create_sheet("Answers",["Qno","Answer","Tags"],index = "Qno")
 		self.__create_sheet("Responses",["Student Name"],index = "Student Name")
@@ -81,7 +83,7 @@ class Acadomate:
 			print("Dataframe to be saved : ")
 			print(df.head())
 			gpd.set_with_dataframe(worksheet=worksheet, dataframe=df, include_index=include_index,include_column_header=True, resize=False,allow_formulas=True)
-			self._dfs[title] = None
+			self._changed[title] = False
 			print(f"{title} is updated")
 
 	def __add_elements(self,title,col,vals,unique = True, rearrange = True):
@@ -96,6 +98,7 @@ class Acadomate:
 			all_df[c] = pd.Series(value_list,dtype=dt)
 		df = pd.DataFrame(all_df,columns=df.columns)
 		self._dfs[title] = df
+		self._changed[title] = True
 
 	def __add_column(self,title,col_name,data, dtype):
 		df = self.__read_sheet(title)
@@ -103,6 +106,7 @@ class Acadomate:
 			add_df = pd.DataFrame(pd.Series(data,dtype=dtype),columns=[col_name])
 			df = pd.concat([df,add_df],axis=1)
 			self._dfs[title] = df
+			self._changed[title] = True
 		else:
 			self.__add_elements(title,col_name,data,unique=True)
 
@@ -123,6 +127,7 @@ class Acadomate:
 		df = df.append(pd.Series(data, index=df.columns[:len(data)]), ignore_index=True)
 		df = df.drop_duplicates(subset=[indexx],keep='last')
 		self._dfs[title] = df
+		self._changed[title] = True
 
 	def __add_value(self,title,row_name,col_name,value, index = None):
 		df = self.__read_sheet(title)
@@ -132,6 +137,7 @@ class Acadomate:
 		if idx is not None:
 			df.loc[idx,col_name] = value
 			self._dfs[title] = df
+			self._changed[title] = True
 
 	def __find_row_index(self,df,col_name,row_val):
 		idx = df.index[df[col_name] == row_val].tolist()
@@ -177,6 +183,7 @@ class Acadomate:
 		df[new_col] = df.apply(lambda row : weighted_avg(row,col_names,weights,is_null),axis = 1)
 
 		self._dfs[title] = df
+		self._changed[title] = True
 
 	def add_mentors(self,names):
 		self.__add_elements("Fundamental","Mentors",names,unique=True)
@@ -207,7 +214,7 @@ class Acadomate:
 
 	def write_all(self):
 		for title in self.sheets:
-			if self._dfs[title] is not None:
+			if self._changed[title]:
 				self.__write_sheet(title,self._dfs[title])
 
 	def add_answers(self, test_num , row_name , answers , tags):
@@ -216,6 +223,7 @@ class Acadomate:
 			self.__add_row("Answers",[idx,ans,tag],True)
 		df = self.__read_sheet("Answers")
 		self._dfs["Answers"] = df.sort_values("Qno")
+		self._changed["Answers"] = True
 		self.__add_elements("Fundamental","Tests",[test_num],unique=True)
 
 	def add_student_response(self,test_num , sname,tname,answers):
@@ -229,6 +237,7 @@ class Acadomate:
 		cols = ["Student Name"] + sorted(df.columns[1:])
 		df = df.loc[:,cols]
 		self._dfs["Responses"] = df.sort_values("Student Name")
+		self._changed["Responses"] = True
 		self.__add_elements("Fundamental","Tests",[test_num],unique=True)
 
 	def __filter_answers(self,test_num = None , subject = None, topic = None):
@@ -347,11 +356,12 @@ class Acadomate:
 
 		is_null = col_type == 'topic'
 		is_avg = col_type != 'topic'
-		
-		scale = 100 if col_type != 'topic' else None
+		scale = 1 if col_type != 'topic' else None
+
 		self.__create_sheet(worksheet_name,["Student Name"],"Student Name")
 		df = self.compute_report(col_type=col_type,scale=scale)
 		self._dfs[worksheet_name] = df
+		self._changed[worksheet_name] = True
 		for suff in ["Correct" , "Wrong", "NotAttempted"]:
 			cols = [col for col in df.columns if re.search(suff,col) is not None]
 			self.__add_total(worksheet_name,is_average=is_avg,col_names=cols,suffix=suff,is_null=is_null)
@@ -362,7 +372,7 @@ class Acadomate:
 		worksheet_name = f"Result-Test{test_number}"
 
 		df_abs = self.compute_report(col_type='subject',test_num=test_number,scale=None)
-		df_100 = self.compute_report(col_type='subject',test_num=test_number,scale=100)
+		df_100 = self.compute_report(col_type='subject',test_num=test_number,scale=1)
 		df_100.rename(columns = {c : c + " %age" for c in df_100.columns}, inplace = True)
 		df = pd.concat([df_abs,df_100.iloc[:,1:]],axis=1)
 		cols = [c for c in df.columns if re.search("Correct",c) is not None]
@@ -374,6 +384,7 @@ class Acadomate:
 
 		self.__create_sheet(worksheet_name,["Student Name"],"Student Name")
 		self._dfs[worksheet_name] = df
+		self._changed[worksheet_name] = True
 
 		cols = [col for col in df.columns if re.search("%age",col) is not None]
 		wgts = [25 , 25 , 50]
