@@ -213,4 +213,7 @@ def update_acadomate(am):
 		am.write_all()
 	format_result(am,1)
 	format_result(am,2)
+	format_report(am,'topic')
+	format_report(am,'test')
+	format_report(am,'subject')
 	

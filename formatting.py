@@ -1,4 +1,9 @@
 from gspread_formatting import *
+import string
+
+
+letters = list(string.ascii_lowercase)
+letters.extend([i+b for i in letters for b in letters])
 
 middle_fmt = cellFormat(
     horizontalAlignment = 'CENTER',
@@ -69,21 +74,60 @@ na_fmt = cellFormat(
     textFormat = textFormat(foregroundColor=color(0.1, 0.05, 0.15))
     )
 
-def format_result(am,test_num):
-    ws_name = f"Result-Test{test_num}"
-    ws = am.get_worksheet(ws_name)
+def format_report(am,col_type):
+    worksheet_name = "Report"
+    if col_type == 'topic':
+        worksheet_name += "-Topic"
+    elif col_type == 'subject':
+        worksheet_name += "-Subject"
+    elif col_type == 'test':
+        worksheet_name += "-Test"
+
+    ws = am.get_worksheet(worksheet_name)
     # r , c = am.get_sheet_dim(ws_name)
     c = len(ws.row_values(1))
     r = len(ws.get_all_values())
-    import string
-    letters = list(string.ascii_lowercase)
-    letters.extend([i+b for i in letters for b in letters])
 
     batch = batch_updater(ws.spreadsheet)
     batch.format_cell_range(ws, '1', header_fmt)
     batch.format_cell_range(ws, 'A', index_fmt)
     batch.format_cell_range(ws, f'A2:A{r-1}', name_fmt)
+
+    for col in range(1,c,3):
+        batch.format_cell_range(ws, f'{letters[col]}2:{letters[col]}{r-1}', correct_fmt)
+        batch.format_cell_range(ws, f'{letters[col+1]}2:{letters[col+1]}{r-1}', na_fmt)
+        batch.format_cell_range(ws, f'{letters[col+2]}2:{letters[col+2]}{r-1}', wrong_fmt)
+        batch.set_column_width(ws, f'{letters[col]}', 50)
+        batch.set_column_width(ws, f'{letters[col+1]}', 50)
+        batch.set_column_width(ws, f'{letters[col+2]}', 50)
+        ws.merge_cells(f'{letters[col]}1:{letters[col+2]}1', merge_type='MERGE_ALL')
+
+    # batch.format_cell_range(ws, f'{letters[c-3]}2:{letters[c-1]}{r-1}', total_fmt)
+
     batch.format_cell_range(ws, f'{r}', avg_fmt)
+
+    batch.set_column_width(ws, 'A', 180)
+    batch.set_frozen(ws, rows=1, cols=1)
+    # batch.set_column_width(ws, f'{letters[c-1]}', 80)
+    batch.format_cell_range(ws,f'B1:{letters[c-1]}{r}', middle_fmt)
+    if col_type == 'topic':
+        batch.format_cell_range(ws,f'B1:{letters[c-1]}{r-1}', cellFormat(numberFormat = numberFormat(type='NUMBER',pattern="0")))
+        batch.format_cell_range(ws,f'{r}', cellFormat(numberFormat = numberFormat(type='NUMBER',pattern="0.0")))
+    else:
+        batch.format_cell_range(ws,f'B1:{letters[c-1]}{r}', cellFormat(numberFormat = numberFormat(type='PERCENT',pattern="0.0%")))
+
+    batch.execute()
+
+def format_result(am,test_num):
+    ws_name = f"Result-Test{test_num}"
+    ws = am.get_worksheet(ws_name)
+    c = len(ws.row_values(1))
+    r = len(ws.get_all_values())
+
+    batch = batch_updater(ws.spreadsheet)
+    batch.format_cell_range(ws, '1', header_fmt)
+    batch.format_cell_range(ws, 'A', index_fmt)
+    batch.format_cell_range(ws, f'A2:A{r-1}', name_fmt)
 
     for col in range(3,c,2):
         batch.format_cell_range(ws, f'{letters[col-2]}2:{letters[col-2]}{r-1}', number_fmt)
@@ -92,11 +136,12 @@ def format_result(am,test_num):
         batch.set_column_width(ws, f'{letters[col-1]}', 60)
         ws.merge_cells(f'{letters[col-2]}1:{letters[col-1]}1', merge_type='MERGE_ALL')
 
-    batch.format_cell_range(ws, f'{letters[c-1]}2:{letters[c-1]}{r}', total_fmt)
+    batch.format_cell_range(ws, f'{letters[c-1]}2:{letters[c-1]}{r-1}', total_fmt)
+    batch.format_cell_range(ws, f'{r}', avg_fmt)
 
     batch.set_column_width(ws, 'A', 180)
     batch.set_frozen(ws, rows=1, cols=1)
     batch.set_column_width(ws, f'{letters[c-1]}', 80)
-    batch.format_cell_range(ws,f'B1:{letters[c-1]}{r+1}', middle_fmt)
+    batch.format_cell_range(ws,f'B1:{letters[c-1]}{r}', middle_fmt)
 
     batch.execute()
