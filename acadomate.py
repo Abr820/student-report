@@ -122,7 +122,6 @@ class Acadomate:
 	def __get_column(self,title,col_name):
 		df = self.__read_sheet(title)
 		l = [v for v in df[col_name].values.tolist() if v is not None and not pd.isnull(v)]
-		print(l)
 		return l
 
 	def __add_row(self,title,data,replace = True):
@@ -133,7 +132,8 @@ class Acadomate:
 			if idx is not None:
 				data = df.loc[idx[0]].values.tolist() + data[1:]
 
-		df = df.append(pd.Series(data, index=df.columns[:len(data)]), ignore_index=True)
+		# df = df.append(pd.Series(data, index=df.columns[:len(data)]), ignore_index=True)
+		df = pd.concat([df,pd.DataFrame([data], columns=df.columns[:len(data)])],axis=0)
 		df = df.drop_duplicates(subset=[indexx],keep='last')
 		self._dfs[title] = df
 		self._changed[title] = True
@@ -180,12 +180,16 @@ class Acadomate:
 		def weighted_avg(row,col_names,weights,is_null = False):
 			# print("lambda function : ",row,col_names)
 			tot = 0
+			num_null = 0
 			for c , w in zip(col_names,weights):
 				if row[c] is None or pd.isnull(row[c]):
 					if not is_null:
 						return None
+					num_null += 1
 				else:
 					tot += w * row[c]
+			if num_null == len(col_names):
+				return None
 			return tot
 
 		# df[new_col] = df[col_names].mul(weights).sum(axis=1)

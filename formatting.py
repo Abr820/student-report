@@ -101,7 +101,8 @@ float_fmt = cellFormat(
 
 total_fmt = cellFormat(
     backgroundColor = color(1, 0.95, 0.1),
-    textFormat = textFormat(bold=True,foregroundColor=color(1, 0.1, 0.1))
+    textFormat = textFormat(bold=True,foregroundColor=color(1, 0.1, 0.1)),
+    numberFormat = numberFormat(type='PERCENT',pattern="0.0%")
     )
 
 correct_fmt = cellFormat(
