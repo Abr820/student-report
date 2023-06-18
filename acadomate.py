@@ -50,7 +50,6 @@ class Acadomate:
 		if index is not None and index in values_list:
 			self._indices[title] = index
 			print(f"{index} is added as index of sheet {title}")
-		print(self._indices)
 
 	def __read_sheet(self,title):
 		if title not in self.sheets:
@@ -86,6 +85,10 @@ class Acadomate:
 			worksheet.clear()
 			df = df.fillna("")
 			df = df.replace({None:'',np.nan:''})
+			if re.search("Report",title) is not None:
+				df.columns = df.columns.str.split('_', expand=True)
+			elif re.search("Result",title) is not None:
+				df.columns = df.columns.str.split('-', expand=True)
 			print("Dataframe to be saved : ")
 			print(df.head())
 			gpd.set_with_dataframe(worksheet=worksheet, dataframe=df, include_index=include_index,include_column_header=True, resize=True,allow_formulas=True)
@@ -296,7 +299,7 @@ class Acadomate:
 		d = {}
 		students = self.get_students()
 		for sname in students:
-			col_names = [" Correct" , " Wrong", " NotAttempted"]
+			col_names = ["_Crt" , "_Wng", "_NA"]
 			col_names = [prefix + col for col in col_names]
 			for col_name in col_names:
 				if col_name not in d.keys():
@@ -349,6 +352,7 @@ class Acadomate:
 			cols.remove("Student Name")
 		cols.insert(0,"Student Name")
 		df = df.loc[:,cols]
+
 		return df
 	
 	def add_report(self,col_type = None):
@@ -368,7 +372,7 @@ class Acadomate:
 		df = self.compute_report(col_type=col_type,scale=scale)
 		self._dfs[worksheet_name] = df
 		self._changed[worksheet_name] = True
-		for suff in ["Correct" , "Wrong", "NotAttempted"]:
+		for suff in ["_Crt" , "_Wng", "_NA"]:
 			cols = [col for col in df.columns if re.search(suff,col) is not None]
 			self.__add_total(worksheet_name,is_average=is_avg,col_names=cols,suffix=suff,is_null=is_null)
 
@@ -378,21 +382,23 @@ class Acadomate:
 		worksheet_name = f"Result-Test{test_number}"
 
 		df_abs = self.compute_report(col_type='subject',test_num=test_number,scale=None)
+		df_abs.rename(columns = {c : c + "-marks" for c in df_abs.columns if c != "Student Name"}, inplace = True)
 		df_100 = self.compute_report(col_type='subject',test_num=test_number,scale=1)
-		df_100.rename(columns = {c : c + " %age" for c in df_100.columns}, inplace = True)
+		df_100.rename(columns = {c : c + "-percent" for c in df_100.columns}, inplace = True)
 		df = pd.concat([df_abs,df_100.iloc[:,1:]],axis=1)
-		cols = [c for c in df.columns if re.search("Correct",c) is not None]
+		cols = [c for c in df.columns if re.search("_Crt",c) is not None]
 		cols = sorted(cols)
 		cols.insert(0,"Student Name")
 		dropped_cols = [c for c in df.columns if c not in cols]
 		df = df.drop(dropped_cols,axis=1)
 		df = df.loc[:,cols]
+		df.rename(columns = {c : c.replace("_Crt","") for c in df.columns}, inplace = True)
 
 		self.__create_sheet(worksheet_name,["Student Name"],"Student Name")
 		self._dfs[worksheet_name] = df
 		self._changed[worksheet_name] = True
 
-		cols = [col for col in df.columns if re.search("%age",col) is not None]
+		cols = [col for col in df.columns if re.search("-percent",col) is not None]
 		wgts = [25 , 25 , 50]
 		self.__add_total(worksheet_name,is_average=True,col_names=cols,weights=wgts)
 
