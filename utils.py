@@ -211,9 +211,12 @@ def update_acadomate(am):
 			update_reports(am)
 
 		am.write_all()
-	format_result(am,1)
-	format_result(am,2)
-	format_report(am,'topic')
-	format_report(am,'test')
-	format_report(am,'subject')
+
+	reports = ['topic','subject','test']
+	for rep in reports:
+		format_report(am,rep)
+	
+	tests = am.get_tests()
+	for t in tests:
+		format_result(am,t)
 	

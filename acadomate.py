@@ -65,6 +65,9 @@ class Acadomate:
 			df = pd.DataFrame(worksheet.get_all_records(),columns=columns)
 			df = df.replace({'': None,np.nan:None})
 
+			if title == "Answers" and df.shape[0]>0:
+				df["Tags"] = df.apply(lambda row : list((row["Tags"][1:-1]).replace("'","").replace(" , ",",").replace(" ,",",").replace(", ",",").split(",")),axis = 1)
+
 			# index = self._indices[title]
 			# if index is not None and index in df.columns:
 			# 	df = df.set_index(index)
@@ -247,7 +250,7 @@ class Acadomate:
 		df_ans = self.__read_sheet("Answers")
 		ans_d = df_ans.to_dict("index")
 		ans = {vals["Qno"] : vals["Answer"] for vals in ans_d.values()}
-		tags = {vals["Qno"] : list((vals["Tags"][1:-1]).replace("'","").replace(" , ",",").replace(" ,",",").replace(", ",",").split(",")) for vals in ans_d.values()}
+		tags = {vals["Qno"] : vals["Tags"] for vals in ans_d.values()}
 
 		if test_num is not None:
 			test_name = "T"+str(test_num)
@@ -307,7 +310,7 @@ class Acadomate:
 						col_vals[0] += 1
 					elif v == "NA":
 						col_vals[2] += 1
-					else:
+					elif v is not None and not pd.isnull(v):
 						col_vals[1] += 1
 
 			for col_name , val in zip(col_names,col_vals):
