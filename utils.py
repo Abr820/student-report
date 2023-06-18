@@ -1,3 +1,5 @@
+from formatting import *
+
 def get_test_number():
 	t = -1
 	while(t<=0):
@@ -209,4 +211,6 @@ def update_acadomate(am):
 			update_reports(am)
 
 		am.write_all()
+	format_result(am,1)
+	format_result(am,2)
 	

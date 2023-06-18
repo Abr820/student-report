@@ -24,6 +24,9 @@ class Acadomate:
 		self.__create_sheet("Answers",["Qno","Answer","Tags"],index = "Qno")
 		self.__create_sheet("Responses",["Student Name"],index = "Student Name")
 
+	def get_worksheet(self,title):
+		return self.sh.worksheet(title)
+
 	def __create_sheet(self, title , columns , index = None):
 		ws = None
 		if title not in self.sheets:
@@ -82,7 +85,7 @@ class Acadomate:
 			df = df.replace({None:'',np.nan:''})
 			print("Dataframe to be saved : ")
 			print(df.head())
-			gpd.set_with_dataframe(worksheet=worksheet, dataframe=df, include_index=include_index,include_column_header=True, resize=False,allow_formulas=True)
+			gpd.set_with_dataframe(worksheet=worksheet, dataframe=df, include_index=include_index,include_column_header=True, resize=True,allow_formulas=True)
 			self._changed[title] = False
 			print(f"{title} is updated")
 
