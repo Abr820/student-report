@@ -25,7 +25,9 @@ class Acadomate:
 		self.__create_sheet("Responses",["Student Name"],index = "Student Name")
 
 	def get_worksheet(self,title):
-		return self.sh.worksheet(title)
+		if title in self.sheets:
+			return self.sh.worksheet(title)
+		return None
 
 	def __create_sheet(self, title , columns , index = None):
 		ws = None

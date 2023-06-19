@@ -202,6 +202,10 @@ def update_reports(am):
 			tests = am.get_tests()
 			for t in tests:
 				format_result(am,t)
+			
+			format_answer(am)
+			format_response(am)
+			format_fundamental(am)
 
 def update_acadomate(am):
 	print("-"*30 + "\nWELCOME to Acadomate\n"+"-"*30)

@@ -130,6 +130,8 @@ def format_report(am,col_type):
         worksheet_name += "-Test"
 
     ws = am.get_worksheet(worksheet_name)
+    if ws is None:
+        return
     # r , c = am.get_sheet_dim(ws_name)
     c = len(ws.row_values(1))
     r = len(ws.get_all_values())
@@ -172,6 +174,8 @@ def format_report(am,col_type):
 def format_result(am,test_num):
     ws_name = f"Result-Test{test_num}"
     ws = am.get_worksheet(ws_name)
+    if ws is None:
+        return
     c = len(ws.row_values(1))
     r = len(ws.get_all_values())
 
@@ -186,8 +190,10 @@ def format_result(am,test_num):
         batch.format_cell_range(ws, f'{letters[col-1]}3:{letters[col-1]}{r-1}', percent_fmt+brd_right_fmt)
         batch.set_column_width(ws, f'{letters[col-2]}', 60)
         batch.set_column_width(ws, f'{letters[col-1]}', 60)
+        batch.format_cell_range(ws, f'{letters[col-2]}{r}', cellFormat(numberFormat = numberFormat(type='NUMBER',pattern="0.0")))
+        batch.format_cell_range(ws, f'{letters[col-1]}{r}', cellFormat(numberFormat = numberFormat(type='PERCENT',pattern="0.0%")))
 
-    batch.format_cell_range(ws, f'{letters[c-1]}3:{letters[c-1]}{r-1}', total_fmt+brd_fmt)
+    batch.format_cell_range(ws, f'{letters[c-1]}3:{letters[c-1]}{r}', total_fmt+brd_fmt)
     batch.format_cell_range(ws, f'{r}', avg_fmt+brd_fmt)
 
     batch.set_column_width(ws, 'A', 180)
@@ -200,3 +206,96 @@ def format_result(am,test_num):
         ws.merge_cells(f'{letters[col-2]}1:{letters[col-1]}1', merge_type='MERGE_ALL')
     ws.merge_cells('A1:A2', merge_type='MERGE_ALL')
     ws.merge_cells(f'{letters[c-1]}1:{letters[c-1]}2', merge_type='MERGE_ALL')
+
+def format_response(am):
+    ws_name = "Responses"
+    ws = am.get_worksheet(ws_name)
+    if ws is None:
+        return
+    c = len(ws.row_values(1))
+    r = len(ws.get_all_values())
+
+    batch = batch_updater(ws.spreadsheet)
+    batch.format_cell_range(ws, '1', header_fmt+brd_fmt)
+    batch.format_cell_range(ws, 'A', index_fmt+brd_sub_fmt)
+    batch.format_cell_range(ws, f'A2:A{r}', name_fmt)
+
+    for col in range(1,c,1):
+        batch.set_column_width(ws, f'{letters[col-1]}', 70)
+
+    batch.set_column_width(ws, 'A', 180)
+    batch.set_frozen(ws, rows=1, cols=1)
+    batch.format_cell_range(ws,f'B1:{letters[c-1]}{r}', middle_fmt)
+
+    rule = ConditionalFormatRule(
+        ranges=[GridRange.from_a1_range(f'B2:{letters[c-1]}{r}', ws)],
+        booleanRule=BooleanRule(
+                condition=BooleanCondition('NOT_BLANK'),
+                format=correct_fmt
+            )
+        )
+
+    rules = get_conditional_format_rules(ws)
+    rules.append(rule)
+
+    batch.execute()
+    rules.save()
+
+def format_answer(am):
+    ws_name = "Answers"
+    ws = am.get_worksheet(ws_name)
+    if ws is None:
+        return
+    c = len(ws.row_values(1))
+    r = len(ws.get_all_values())
+
+    batch = batch_updater(ws.spreadsheet)
+    batch.format_cell_range(ws, '1', header_fmt+brd_fmt)
+    batch.format_cell_range(ws, 'A', index_fmt+brd_sub_fmt)
+    batch.format_cell_range(ws, f'A2:A{r}', name_fmt)
+
+    batch.format_cell_range(ws, f'B2:B{r}', correct_fmt+brd_side_fmt)
+    batch.set_column_width(ws, 'B', 70)
+    
+    batch.format_cell_range(ws, f'C2:C{r}', na_fmt)
+    batch.set_column_width(ws, 'C', 800)
+
+    batch.set_column_width(ws, 'A', 80)
+    batch.set_frozen(ws, rows=1, cols=1)
+    batch.format_cell_range(ws,'B', middle_fmt)
+    batch.format_cell_range(ws,'C', cellFormat(horizontalAlignment = 'LEFT',wrapStrategy = 'WRAP'))
+
+    batch.execute()
+
+def format_fundamental(am):
+    ws_name = "Fundamental"
+    ws = am.get_worksheet(ws_name)
+    if ws is None:
+        return
+    c = len(ws.row_values(1))
+    r = len(ws.get_all_values())
+
+    batch = batch_updater(ws.spreadsheet)
+    batch.format_cell_range(ws, '1', header_fmt+brd_fmt)
+    batch.format_cell_range(ws, 'A', index_fmt)
+
+    for col in range(1,c,1):
+        batch.set_column_width(ws, f'{letters[col]}', 165)
+
+    batch.set_column_width(ws, 'A', 60)
+    batch.set_frozen(ws, rows=1, cols=0)
+    batch.format_cell_range(ws,f'A1:{letters[c-1]}{r}', middle_fmt)
+
+    rule = ConditionalFormatRule(
+        ranges=[GridRange.from_a1_range(f'A2:{letters[c-1]}{r}', ws)],
+        booleanRule=BooleanRule(
+                condition=BooleanCondition('NOT_BLANK'),
+                format=correct_fmt+cellFormat(textFormat = textFormat(bold=True))
+            )
+        )
+
+    rules = get_conditional_format_rules(ws)
+    rules.append(rule)
+
+    batch.execute()
+    rules.save()
