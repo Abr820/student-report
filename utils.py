@@ -165,16 +165,16 @@ def update_fundamentals(am):
 
 def update_reports(am):
 	print("-"*30 + "\nAnswers , Responses and Reports\n"+"-"*30)
-	ops = ["Add Test Answer" , "Add Student Response" , "Make Report"  , "Make Result", "Write ALL into Spreadsheet", "Format Sheets", "Update Test Answer" , "Update Student Response", "Exit"]
+	ops = ["Add Test Answer" , "Add Student Response" , "Make Report"  , "Make Result", "Format Sheets", "Update Test Answer" , "Update Student Response", "Exit"]
 	col_types = ['topic','subject','test','all']
 	choice = 0
 	while choice != len(ops):
 		choice = get_choice(ops)
 
-		if choice == 1:
+		if choice == 1 or choice == 6:
 			test_num ,rname , ans , tags = get_answers(am)
 			am.add_answers(test_num , rname,ans,tags)
-		elif choice == 2:
+		elif choice == 2 or choice == 7:
 			test_num , sname , qname , answers = get_student_answer(am)
 			am.add_student_response(test_num , sname,qname,answers)
 		elif choice == 3:
@@ -194,18 +194,9 @@ def update_reports(am):
 				for test in tests:
 					am.make_test_result(test)
 		elif choice == 5:
-			am.write_all()
-		elif choice == 6:
-			for rep in col_types[:-1]:
-				format_report(am,rep)
-			
-			tests = am.get_tests()
-			for t in tests:
-				format_result(am,t)
-			
-			format_answer(am)
-			format_response(am)
-			format_fundamental(am)
+			format_all(am)
+
+		am.write_all()
 
 def update_acadomate(am):
 	print("-"*30 + "\nWELCOME to Acadomate\n"+"-"*30)
@@ -221,4 +212,5 @@ def update_acadomate(am):
 			update_reports(am)
 
 		am.write_all()
+		format_all(am)
 	

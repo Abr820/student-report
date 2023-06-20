@@ -73,7 +73,7 @@ index_fmt = cellFormat(
 
 name_fmt = cellFormat(
     backgroundColor = color(0, 1, 1),
-    textFormat = textFormat(bold=True)
+    textFormat = textFormat(bold=True,foregroundColor=color(0, 0, 0))
     )
 
 
@@ -258,7 +258,7 @@ def format_answer(am):
     batch.set_column_width(ws, 'B', 70)
     
     batch.format_cell_range(ws, f'C2:C{r}', na_fmt)
-    batch.set_column_width(ws, 'C', 800)
+    batch.set_column_width(ws, 'C', 1500)
 
     batch.set_column_width(ws, 'A', 80)
     batch.set_frozen(ws, rows=1, cols=1)
@@ -299,3 +299,16 @@ def format_fundamental(am):
 
     batch.execute()
     rules.save()
+
+def format_all(am):
+    col_types = ['topic','subject','test']
+    for rep in col_types:
+        format_report(am,rep)
+    
+    tests = am.get_tests()
+    for t in tests:
+        format_result(am,t)
+    
+    format_answer(am)
+    format_response(am)
+    format_fundamental(am)

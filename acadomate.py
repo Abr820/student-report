@@ -162,7 +162,7 @@ class Acadomate:
 		letters.extend([i+b for i in letters for b in letters])
 		df = self.__read_sheet(title)
 		row_last , col_last = df.shape
-		row = ["Average"] + [f"=IF(COUNTA({l}2:{l}{row_last+1})=0,\"\",AVERAGE({l}2:{l}{row_last+1}))" for l in letters[1:col_last]]
+		row = ["Average"] + [f"=IF(COUNTA({l}3:{l}{row_last+2})=0,\"\",AVERAGE({l}3:{l}{row_last+2}))" for l in letters[1:col_last]]
 		self.__add_row(title , row)
 
 	def __add_total(self,title, suffix = None,col_names=None , weights = None , is_average=False , is_null = False):
@@ -233,6 +233,9 @@ class Acadomate:
 				self.__write_sheet(title,self._dfs[title])
 
 	def add_answers(self, test_num , row_name , answers , tags):
+		df = self.__read_sheet("Answers")
+		df = df.drop(df[df["Qno"].map(lambda x: re.search(row_name+"Q",x) is not None)].index)
+		self._dfs["Answers"] = df
 		rows = [row_name+f"Q{i+1}" for i in range(len(answers))]
 		for idx,ans,tag in zip(rows,answers,tags):
 			self.__add_row("Answers",[idx,ans,tag],True)
@@ -242,15 +245,21 @@ class Acadomate:
 		self.__add_elements("Fundamental","Tests",[test_num],unique=True)
 
 	def add_student_response(self,test_num , sname,tname,answers):
+		df = self.__read_sheet("Responses")
+		old_qnos = [c for c in df.columns if re.search(tname+"Q",c) is not None]
 		qnos = [tname+f"Q{i+1}" for i in range(len(answers))]
 		for qno in qnos:
 			self.__add_column("Responses",qno,[],'str')
 		self.__add_elements("Responses","Student Name",[sname],unique = True)
+		for qno in old_qnos:
+			self.__add_value("Responses",sname,qno,None)
 		for qno,ans in zip(qnos,answers):
 			self.__add_value("Responses",sname,qno,ans)
 		df = self.__read_sheet("Responses")
 		cols = ["Student Name"] + sorted(df.columns[1:])
 		df = df.loc[:,cols]
+		# df = df.loc[:, (df is None).any(axis=0)]
+		df = df.dropna(axis=1, how='all')
 		self._dfs["Responses"] = df.sort_values("Student Name")
 		self._changed["Responses"] = True
 		self.__add_elements("Fundamental","Tests",[test_num],unique=True)
