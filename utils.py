@@ -140,7 +140,7 @@ def get_student_answer(am):
 
 def update_fundamentals(am):
 	print("-"*30 + "\nFundamental Informations\n"+"-"*30)
-	ops = ["Add Mentor","Add Student","Add Subject","Add Topics","Delete Mentor","Delete Student","Delete Subject" , "Exit"]
+	ops = ["Add Mentor","Add Student","Add Subject","Add Topics","Delete Mentor","Delete Student","Delete Subject","Delete Topic", "Exit"]
 
 	choice = 0
 	while choice != len(ops):
@@ -162,6 +162,28 @@ def update_fundamentals(am):
 			name = name.replace(" , ",",").replace(", ",",").replace(" ,",",")
 			topics = [topic for topic in name.split(",") if topic]
 			am.add_topics(sub,topics)
+		elif choice == 5:
+			mentors = am.get_mentors()
+			ch = get_choice(mentors)
+			am.del_mentor(mentors[ch-1])
+		elif choice == 6:
+			students = am.get_students()
+			ch = get_choice(students)
+			am.del_student(students[ch-1])
+		elif choice == 7:
+			subjects = am.get_subjects()
+			ch = get_choice(subjects)
+			am.del_subject(subjects[ch-1])
+		elif choice == 8:
+			subjects = am.get_subjects()
+			ch_sub = get_choice(subjects)
+			topics = am.get_topics(subjects[ch_sub-1])
+			ch_top = get_multi_choices(topics)
+			del_topics = [topics[ch-1] for ch in ch_top]
+			am.del_topics(subjects[ch_sub-1],del_topics)
+			
+	am.write_all()
+
 
 def update_reports(am):
 	print("-"*30 + "\nAnswers , Responses and Reports\n"+"-"*30)
@@ -211,6 +233,6 @@ def update_acadomate(am):
 		elif choice == 2:
 			update_reports(am)
 
-		am.write_all()
-		format_all(am)
+	am.write_all()
+	format_all(am)
 	

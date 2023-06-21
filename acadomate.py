@@ -110,6 +110,20 @@ class Acadomate:
 		df = pd.DataFrame(all_df,columns=df.columns)
 		self._dfs[title] = df
 		self._changed[title] = True
+	
+	def __del_elements(self,title,col,vals):
+		df = self.__read_sheet(title)
+		all_df = {}
+		for c,dt in zip(df.columns,df.dtypes):
+			value_list = [v for v in df[c].values.tolist() if v is not None and not pd.isnull(v)]
+			if c == col:
+				for v in vals:
+					if v in value_list:
+						value_list.remove(v)
+			all_df[c] = pd.Series(value_list,dtype=dt)
+		df = pd.DataFrame(all_df,columns=df.columns)
+		self._dfs[title] = df
+		self._changed[title] = True
 
 	def __add_column(self,title,col_name,data, dtype):
 		df = self.__read_sheet(title)
@@ -202,12 +216,21 @@ class Acadomate:
 
 	def add_mentors(self,names):
 		self.__add_elements("Fundamental","Mentors",names,unique=True)
+	
+	def get_mentors(self):
+		return self.__get_column("Fundamental","Mentors")
+	
+	def del_mentor(self,name):
+		self.__del_elements("Fundamental","Mentors",[name])
 
 	def add_students(self,names):
 		self.__add_elements("Fundamental","Students",names,unique=True)
 
 	def get_students(self):
 		return self.__get_column("Fundamental","Students")
+	
+	def del_student(self,name):
+		self.__del_elements("Fundamental","Students",[name])
 
 	def add_subjects(self,names):
 		self.__add_elements("Fundamental","Subjects",names,unique=True)
@@ -216,12 +239,22 @@ class Acadomate:
 
 	def get_subjects(self):
 		return self.__get_column("Fundamental","Subjects")
+	
+	def del_subject(self,name):
+		self.__del_elements("Fundamental","Subjects",[name])
+		df = self.__read_sheet("Fundamental")
+		df = df.drop([name+" Topics"],axis=1)
+		self._dfs["Fundamental"] = df
+		self._changed["Fundamental"] = True
 
 	def add_topics(self,sub_name,topic_names):
 		self.__add_elements("Fundamental",sub_name+" Topics",topic_names,unique=True,rearrange = True)
 
 	def get_topics(self,sub):
 		return self.__get_column("Fundamental",sub+" Topics")
+	
+	def del_topics(self,sub_name,topic_names):
+		self.__del_elements("Fundamental",sub_name+" Topics",topic_names)
 
 	def get_tests(self):
 		tests = [int(t) for t in self.__get_column("Fundamental","Tests")]
