@@ -5,6 +5,18 @@ import string
 letters = list(string.ascii_uppercase)
 letters.extend([i+b for i in letters for b in letters])
 
+default_fmt = cellFormat(
+    backgroundColor=color(1, 1, 1),
+    textFormat=textFormat(bold=False, foregroundColor=color(0, 0, 0)),
+    horizontalAlignment='CENTER',
+    borders = borders(
+        top = border(style='NONE'),
+        bottom = border(style='NONE'),
+        left = border(style='NONE'),
+        right = border(style='NONE')
+        )
+    )
+
 brd_fmt = cellFormat(
     borders = borders(
         top = border(style='SOLID_THICK'),
@@ -137,6 +149,7 @@ def format_report(am,col_type):
     r = len(ws.get_all_values())
 
     batch = batch_updater(ws.spreadsheet)
+    batch.format_cell_range(ws,f'A1:A{r}', default_fmt) #clear format first
     batch.format_cell_range(ws, '1', header_fmt+brd_fmt)
     batch.format_cell_range(ws, '2', sub_header_fmt+brd_sub_fmt)
     batch.format_cell_range(ws, 'A', index_fmt+brd_sub_fmt)
@@ -183,6 +196,7 @@ def format_result(am,test_num):
     r = len(ws.get_all_values())
 
     batch = batch_updater(ws.spreadsheet)
+    batch.format_cell_range(ws,f'A1:A{r}', default_fmt) #clear format first
     batch.format_cell_range(ws, '1', header_fmt+brd_fmt)
     batch.format_cell_range(ws, '2', sub_header_fmt+brd_sub_fmt)
     batch.format_cell_range(ws, 'A', index_fmt+brd_sub_fmt)
@@ -223,6 +237,7 @@ def format_response(am):
     r = len(ws.get_all_values())
 
     batch = batch_updater(ws.spreadsheet)
+    batch.format_cell_range(ws,f'A1:A{r}', default_fmt) #clear format first
     batch.format_cell_range(ws, '1', header_fmt+brd_fmt)
     batch.format_cell_range(ws, 'A', index_fmt+brd_sub_fmt)
     batch.format_cell_range(ws, f'A2:A{r}', name_fmt)
@@ -257,6 +272,7 @@ def format_answer(am):
     r = len(ws.get_all_values())
 
     batch = batch_updater(ws.spreadsheet)
+    batch.format_cell_range(ws,f'A1:A{r}', default_fmt) #clear format first
     batch.format_cell_range(ws, '1', header_fmt+brd_fmt)
     batch.format_cell_range(ws, 'A', index_fmt+brd_sub_fmt)
     batch.format_cell_range(ws, f'A2:A{r}', name_fmt)
@@ -283,6 +299,7 @@ def format_fundamental(am):
     r = len(ws.get_all_values())
 
     batch = batch_updater(ws.spreadsheet)
+    batch.format_cell_range(ws,f'A1:A{r}', default_fmt) #clear format first
     batch.format_cell_range(ws, '1', header_fmt+brd_fmt)
     batch.format_cell_range(ws, 'A', index_fmt)
 
