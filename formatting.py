@@ -2,7 +2,7 @@ from gspread_formatting import *
 import string
 
 
-letters = list(string.ascii_lowercase)
+letters = list(string.ascii_uppercase)
 letters.extend([i+b for i in letters for b in letters])
 
 brd_fmt = cellFormat(
@@ -167,6 +167,9 @@ def format_report(am,col_type):
 
     batch.execute()
 
+    #unmerge the previous merging before merge again
+    ws.unmerge_cells(1,1,r,c+2)
+
     for col in range(1,c,3):
         ws.merge_cells(f'{letters[col]}1:{letters[col+2]}1', merge_type='MERGE_ALL')
     ws.merge_cells('A1:A2', merge_type='MERGE_ALL')
@@ -202,6 +205,10 @@ def format_result(am,test_num):
     batch.format_cell_range(ws,f'B1:{letters[c-1]}{r}', middle_fmt)
 
     batch.execute()
+
+    #unmerge the previous merging before merge again
+    ws.unmerge_cells(1,1,r,c+2)
+
     for col in range(3,c,2):
         ws.merge_cells(f'{letters[col-2]}1:{letters[col-1]}1', merge_type='MERGE_ALL')
     ws.merge_cells('A1:A2', merge_type='MERGE_ALL')
